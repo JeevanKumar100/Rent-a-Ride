@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  rent-a-ride:
+    image: yourdockerhubusername/rent-a-ride:latest
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
