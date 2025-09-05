@@ -1,16 +1,21 @@
-# build stage
-FROM node:18-alpine AS build
-WORKDIR /app
-# copy package files first to leverage cache
-COPY package*.json ./
-RUN npm ci --silent
-COPY . .
-RUN npm run build
+# small, generic Dockerfile — adjust CMD to match your app entrypoint
+FROM python:3.11-slim AS base
 
-# final stage: serve with nginx
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-# optional: add a custom nginx conf that falls back to index.html (SPA)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# If your app is Node/Java use the respective FROM base (see Node/Python/Java examples below)
+
+WORKDIR /app
+# copy app files
+COPY . /app
+
+# default: if requirements.txt present, install
+RUN if [ -f requirements.txt ]; then \
+      apt-get update && apt-get install -y build-essential gcc libpq-dev --no-install-recommends && \
+      pip install --no-cache-dir -r requirements.txt && \
+      apt-get remove -y build-essential gcc && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+ENV PORT=8000
+EXPOSE ${PORT}
+
+# default command — override per stack
+CMD ["sh", "-c", "echo 'Adjust Dockerfile CMD to start your application' && sleep 3600"]
