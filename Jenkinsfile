@@ -35,7 +35,8 @@ pipeline {
     stage('Docker Build & Push') {
       steps {
         script {
-          def shortRev = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+          // Use Jenkins env var instead of git command
+          def shortRev = env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : env.BUILD_NUMBER
 
           withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
             sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
